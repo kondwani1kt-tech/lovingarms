@@ -9,6 +9,7 @@ envVarGroups:
       - { key: APP_URL, sync: false }
       - { key: LOG_CHANNEL, value: stderr }
       - { key: DB_CONNECTION, value: pgsql }
+      - { key: DB_URL, sync: false }
       - { key: DB_PORT, value: "5432" }
       - { key: DB_SSLMODE, value: require }
       - { key: SESSION_DRIVER, value: database }
@@ -24,14 +25,6 @@ envVarGroups:
       - { key: SUPABASE_ANON_KEY, sync: false }
       - { key: SUPABASE_SERVICE_ROLE_KEY, sync: false }
 
-databases:
-  - name: loving-arms-db
-    plan: 0.1c-256mb
-    postgresMajorVersion: "18"
-    databaseName: lovingarms
-    user: lovingarms
-    ipAllowList: []
-
 services:
   - type: web
     name: loving-arms
@@ -40,10 +33,6 @@ services:
     healthCheckPath: /up
     envVars:
       - fromGroup: loving-arms-env
-      - key: DB_URL
-        fromDatabase:
-          name: loving-arms-db
-          property: connectionString
 
   - type: cron
     name: loving-arms-weekly-report
@@ -53,7 +42,3 @@ services:
     dockerCommand: php artisan report:weekly
     envVars:
       - fromGroup: loving-arms-env
-      - key: DB_URL
-        fromDatabase:
-          name: loving-arms-db
-          property: connectionString
