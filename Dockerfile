@@ -9,6 +9,7 @@ RUN apt-get update \
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
+ENV PORT=10000
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf \
  && printf '<Directory /var/www/html/public>\n    AllowOverride All\n    Require all granted\n</Directory>\n' > /etc/apache2/conf-available/laravel.conf \
  && a2enconf laravel
@@ -18,6 +19,8 @@ COPY . .
 RUN composer install --no-dev --optimize-autoloader --no-interaction \
  && chown -R www-data:www-data storage bootstrap/cache \
  && chmod +x docker/start.sh
+
+EXPOSE 10000
 
 # CMD (not ENTRYPOINT) so Render's cron service can override it with `php artisan report:weekly`.
 CMD ["docker/start.sh"]
