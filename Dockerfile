@@ -1,8 +1,8 @@
 FROM php:8.3-apache
 
 RUN apt-get update \
- && apt-get install -y --no-install-recommends git unzip libzip-dev ca-certificates \
- && docker-php-ext-install pdo_mysql zip bcmath \
+  && apt-get install -y --no-install-recommends git unzip libzip-dev libpq-dev ca-certificates \
+  && docker-php-ext-install pdo_pgsql pgsql zip bcmath \
  && a2enmod rewrite headers \
  && rm -rf /var/lib/apt/lists/*
 

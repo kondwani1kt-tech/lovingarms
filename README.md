@@ -1,6 +1,6 @@
 # Loving Arms Home Care, SPC — Web Application
 
-Laravel (PHP) + MySQL + Supabase Auth, deployed on Render.
+Laravel (PHP) + Render managed PostgreSQL + Supabase Auth, deployed on Render.
 
 This folder is an **overlay**: it contains only the project-specific files. Drop it on top of a fresh Laravel install.
 
@@ -26,10 +26,11 @@ composer create-project laravel/laravel loving-arms
 cd loving-arms
 composer require resend/resend-php        # email over HTTPS
 cp .env.example .env
+touch database/database.sqlite
 php artisan key:generate
 ```
 
-Fill in `.env` (database, Supabase, Resend, `NOTIFY_EMAIL`), then:
+Fill in `.env` (Supabase, Resend, `NOTIFY_EMAIL`). Local development uses SQLite; Render uses managed PostgreSQL via `DB_URL`, then:
 
 ```bash
 php artisan migrate
@@ -51,9 +52,9 @@ How it works: the login form posts to Laravel; Laravel verifies the password wit
 ## 3. Deploy on Render
 
 1. Push the project to GitHub.
-2. Create a **MySQL database** somewhere reachable from Render (Render does not host MySQL as a managed database — use a MySQL provider such as Aiven, TiDB Cloud or Railway, or a MySQL Docker private service on Render). Put its details in `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`.
-3. In Render: **New → Blueprint**, pick the repo. `render.yaml` creates the web service and a weekly-report cron job.
-4. Fill the variables marked `sync: false` (`APP_KEY` from `php artisan key:generate --show`, `APP_URL`, DB, Supabase, Resend, `NOTIFY_EMAIL`).
+2. In Render: **New → Blueprint**, pick the repo. `render.yaml` creates the managed PostgreSQL database, web service and weekly-report cron job.
+3. The blueprint wires `DB_URL` from the database connection string automatically; no database password is stored in Git.
+4. Fill the variables marked `sync: false` (`APP_KEY` from `php artisan key:generate --show`, `APP_URL`, Supabase, Resend, `NOTIFY_EMAIL`).
 5. Deploy. On start the container runs migrations automatically.
 6. Create the first admin from the Render **Shell** tab: `php artisan staff:create admin@example.com "Name" --role=admin`
    (or create the user in the Supabase dashboard and add `--local-only`).
@@ -72,7 +73,7 @@ Email: Render's free web services block outbound SMTP, so the app uses Resend's 
 ## 5. Notes before going live
 
 - Forms are protected by CSRF, rate limiting and a hidden honeypot field. Add Cloudflare Turnstile or reCAPTCHA if spam gets through.
-- The application form deliberately does not collect SSNs, dates of birth or document uploads. Keep it that way unless the company has a plan for storing that data securely (Render's disk is ephemeral, so uploads need external storage such as S3 or Supabase Storage).
+- The application form deliberately does not collect SSNs, dates of birth or document uploads. Keep it that way unless the company has a plan for storing that data securely (Render's disk is ephemeral, so uploads need external storage such as S3).
 - Client records and notes can be sensitive. Keep scheduling notes to what is needed to schedule care, and have the company confirm its privacy-policy and data-handling obligations.
 - The About page repeats the licensing status from the company profile. Update it once the licence is approved.
-- Tests: none are included yet. Delete `tests/Feature/ExampleTest.php` if you do not run the default test suite against a database.
+- Tests: run `php artisan test`; the suite uses SQLite and does not touch the production database.

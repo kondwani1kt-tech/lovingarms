@@ -1,4 +1,3 @@
-# Render Blueprint. Fill the `sync: false` values in the Render dashboard.
 envVarGroups:
   - name: loving-arms-env
     envVars:
@@ -6,16 +5,12 @@ envVarGroups:
       - { key: APP_ENV, value: production }
       - { key: APP_DEBUG, value: "false" }
       - { key: APP_TIMEZONE, value: America/Los_Angeles }
-      - { key: APP_KEY, sync: false }          # php artisan key:generate --show
-      - { key: APP_URL, sync: false }          # e.g. https://www.yourdomain.com
+      - { key: APP_KEY, sync: false }
+      - { key: APP_URL, sync: false }
       - { key: LOG_CHANNEL, value: stderr }
-      - { key: DB_CONNECTION, value: mysql }
-      - { key: DB_HOST, sync: false }
-      - { key: DB_PORT, value: "3306" }
-      - { key: DB_DATABASE, sync: false }
-      - { key: DB_USERNAME, sync: false }
-      - { key: DB_PASSWORD, sync: false }
-      - { key: MYSQL_ATTR_SSL_CA, value: /etc/ssl/certs/ca-certificates.crt }
+      - { key: DB_CONNECTION, value: pgsql }
+      - { key: DB_PORT, value: "5432" }
+      - { key: DB_SSLMODE, value: require }
       - { key: SESSION_DRIVER, value: database }
       - { key: SESSION_SECURE_COOKIE, value: "true" }
       - { key: CACHE_STORE, value: file }
@@ -29,20 +24,36 @@ envVarGroups:
       - { key: SUPABASE_ANON_KEY, sync: false }
       - { key: SUPABASE_SERVICE_ROLE_KEY, sync: false }
 
+databases:
+  - name: loving-arms-db
+    plan: 0.1c-256mb
+    postgresMajorVersion: "18"
+    databaseName: lovingarms
+    user: lovingarms
+    ipAllowList: []
+
 services:
   - type: web
     name: loving-arms
     runtime: docker
-    plan: starter            # use "free" only for testing: it sleeps when idle
+    plan: starter
     healthCheckPath: /up
     envVars:
       - fromGroup: loving-arms-env
+      - key: DB_URL
+        fromDatabase:
+          name: loving-arms-db
+          property: connectionString
 
   - type: cron
     name: loving-arms-weekly-report
     runtime: docker
     plan: starter
-    schedule: "0 16 * * 1"   # Mondays 16:00 UTC
+    schedule: "0 16 * * 1"
     dockerCommand: php artisan report:weekly
     envVars:
       - fromGroup: loving-arms-env
+      - key: DB_URL
+        fromDatabase:
+          name: loving-arms-db
+          property: connectionString
