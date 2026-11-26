@@ -52,8 +52,8 @@ How it works: the login form posts to Laravel; Laravel verifies the password wit
 ## 3. Deploy on Render
 
 1. Push the project to GitHub.
-2. Create a Render PostgreSQL database (or use an existing one), then in Render: **New → Blueprint**, pick the repo. `render.yaml` creates the web service and weekly-report cron job.
-3. When prompted, paste the database external connection string into `DB_URL`; no database password is stored in Git. Alternatively set `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD` and `DB_SSLMODE` in the web service dashboard.
+2. In Render: **New → Blueprint**, pick the repo. `render.yaml` creates the managed PostgreSQL database, web service and weekly-report cron job.
+3. The blueprint injects `DB_URL`, `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME` and `DB_PASSWORD` into both services from that database; no database password is stored in Git.
 4. Fill the remaining variables marked `sync: false` (`APP_KEY` from `php artisan key:generate --show`, `APP_URL`, Supabase, Resend, `NOTIFY_EMAIL`).
 5. Deploy. On start the container runs migrations automatically.
 6. Create the first admin from the Render **Shell** tab: `php artisan staff:create admin@example.com "Name" --role=admin`
